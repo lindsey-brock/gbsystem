@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import type { Parser, ParsedLineItem } from "./types";
 
 const HEADER_MAP: Record<string, keyof ParsedLineItem> = {
@@ -30,24 +30,45 @@ function num(v: any): number {
   return isNaN(n) ? 0 : n;
 }
 
-export const genericExcelParser: Parser = (buffer) => {
-  const wb = XLSX.read(buffer, { type: "array" });
-  const sheet = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json<any>(sheet, { header: 1, defval: "" });
-  if (rows.length < 2) return [];
+export const genericExcelParser: Parser = async (buffer) => {
+  const wb = new ExcelJS.Workbook();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (wb.xlsx.load as any)(new Uint8Array(buffer));
+  const sheet = wb.worksheets[0];
+  if (!sheet) return [];
+
+  const rows: any[][] = [];
+  sheet.eachRow((row) => {
+    rows.push(row.values as any[]);
+  });
+
+  // exceljs row.values is 1-indexed (index 0 is null); normalize to 0-indexed arrays
+  const normalizedRows = rows.map((r) => {
+    const arr = Array.isArray(r) ? r.slice(1) : [];
+    return arr.map((c) => {
+      if (c && typeof c === "object" && "result" in c) return c.result;
+      if (c && typeof c === "object" && "text" in c) return c.text;
+      return c ?? "";
+    });
+  });
+
+  if (normalizedRows.length < 2) return [];
+
   let headerIdx = 0;
-  for (let i = 0; i < Math.min(rows.length, 10); i++) {
-    const matches = (rows[i] as any[]).filter(
+  for (let i = 0; i < Math.min(normalizedRows.length, 10); i++) {
+    const matches = normalizedRows[i].filter(
       (c) => typeof c === "string" && HEADER_MAP[c.trim().toLowerCase()],
     ).length;
     if (matches >= 2) { headerIdx = i; break; }
   }
-  const headers = (rows[headerIdx] as any[]).map((h) =>
-    HEADER_MAP[(String(h ?? "").trim().toLowerCase())],
+
+  const headers = normalizedRows[headerIdx].map((h) =>
+    HEADER_MAP[String(h ?? "").trim().toLowerCase()],
   );
+
   const items: ParsedLineItem[] = [];
-  for (let i = headerIdx + 1; i < rows.length; i++) {
-    const row = rows[i] as any[];
+  for (let i = headerIdx + 1; i < normalizedRows.length; i++) {
+    const row = normalizedRows[i];
     if (!row || row.every((c) => c === "" || c == null)) continue;
     const item: ParsedLineItem = { item_description: "", quantity: 1, unit_price: 0, total_price: 0 };
     row.forEach((cell, idx) => {

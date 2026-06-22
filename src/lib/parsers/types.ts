@@ -6,4 +6,4 @@ export interface ParsedLineItem {
   unit_price: number;
   total_price: number;
 }
-export type Parser = (buffer: ArrayBuffer, filename: string) => ParsedLineItem[];
+export type Parser = (buffer: ArrayBuffer, filename: string) => ParsedLineItem[] | Promise<ParsedLineItem[]>;

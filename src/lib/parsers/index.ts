@@ -12,7 +12,7 @@ const REGISTRY: Record<string, Parser> = {
   pdf_b: genericPdfParser,
 };
 
-export function parseBolla(systemType: string, buffer: ArrayBuffer, filename: string): ParsedLineItem[] {
+export async function parseBolla(systemType: string, buffer: ArrayBuffer, filename: string): Promise<ParsedLineItem[]> {
   const isExcel = /\.(xlsx?|csv)$/i.test(filename);
   const isPdf = /\.pdf$/i.test(filename);
   const parser =

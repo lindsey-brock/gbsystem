@@ -23,7 +23,7 @@ export const parseBollaFile = createServerFn({ method: "POST" })
     const systemType = w?.system_type ?? "generic";
     const bin = Uint8Array.from(atob(data.base64), (c) => c.charCodeAt(0));
     const { parseBolla } = await import("./parsers");
-    const items = parseBolla(systemType, bin.buffer, data.filename);
+    const items = await parseBolla(systemType, bin.buffer, data.filename);
     return { items, system_type: systemType };
   });
 
