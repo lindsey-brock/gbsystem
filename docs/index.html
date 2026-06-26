@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.14/dist/dotlottie-wc.js" type="module"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -97,6 +98,31 @@
     padding: 40px;
     max-width: 620px;
   }
+  .slide-content--with-media {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+  .slide-media {
+    flex-shrink: 0;
+    position: relative;
+    z-index: 3;
+    margin-left: -80px;
+    width: 480px !important;
+    height: 480px !important;
+    opacity: 0; transform: translateY(12px);
+    transition: opacity 0.6s 0.6s, transform 0.6s 0.6s;
+  }
+  .slide.active .slide-media { opacity: 1; transform: translateY(0); }
+  .slide-media--sm {
+    width: 300px !important;
+    height: 300px !important;
+    margin-left: 0;
+  }
+  @media (max-width: 1024px) {
+    .slide-media { display: none; }
+  }
   .slide-eyebrow {
     display: inline-flex;
     align-items: center;
@@ -114,7 +140,7 @@
   }
   .slide.active .slide-eyebrow { opacity: 1; transform: translateY(0); }
   .slide-headline {
-    font-size: clamp(2.2rem, 4vw, 3.6rem);
+    font-size: clamp(2.2rem, 5vw, 4.4rem);
     font-weight: 700; line-height: 1.1;
     letter-spacing: -0.02em; margin-bottom: 20px;
     opacity: 0; transform: translateY(16px);
@@ -294,42 +320,46 @@
   <div class="slides" id="slides">
 
     <div class="slide active" id="slide-0">
-      <div class="slide-content">
+      <div class="slide-content slide-content--with-media">
        <div class="slide-content-inner">
         <div class="slide-eyebrow">Impianti Elettrici</div>
         <h1 class="slide-headline">Impianti elettrici<br>industriali e civili.</h1>
         <p class="slide-body">Progettazione e installazione di impianti elettrici per ogni contesto, dalla villetta al capannone industriale.</p>
        </div>
+       <dotlottie-wc class="slide-media" src="https://lottie.host/27a6a6d3-d4fd-4dc8-a562-541f40fa67f9/B3E40Hsiqi.lottie" style="width: 300px;height: 300px" autoplay loop></dotlottie-wc>
       </div>
     </div>
 
     <div class="slide" id="slide-1">
-      <div class="slide-content">
+      <div class="slide-content slide-content--with-media">
        <div class="slide-content-inner">
         <div class="slide-eyebrow">Impianti Fotovoltaici</div>
         <h1 class="slide-headline">Energia solare<br>per casa<br>e azienda.</h1>
         <p class="slide-body">Installazione e manutenzione di impianti fotovoltaici residenziali e commerciali. Massima resa, certificazione garantita.</p>
        </div>
+       <dotlottie-wc class="slide-media" src="https://lottie.host/00b9d092-95b6-483c-b439-a7b3eabf3d43/1tuz3fnbHx.lottie" style="width: 300px;height: 300px" autoplay loop></dotlottie-wc>
       </div>
     </div>
 
     <div class="slide" id="slide-2">
-      <div class="slide-content">
+      <div class="slide-content slide-content--with-media">
        <div class="slide-content-inner">
         <div class="slide-eyebrow">Domotica</div>
         <h1 class="slide-headline">La casa<br>intelligente<br>che risponde.</h1>
         <p class="slide-body">Automazione domestica integrata: luci, clima, sicurezza e risparmio energetico in un unico sistema connesso.</p>
        </div>
+       <dotlottie-wc class="slide-media" src="https://lottie.host/34120e7f-dba8-48be-a0f5-bd14c01afb93/ylD4zRB2C0.lottie" style="width: 300px;height: 300px" autoplay loop></dotlottie-wc>
       </div>
     </div>
 
     <div class="slide" id="slide-3">
-      <div class="slide-content">
+      <div class="slide-content slide-content--with-media">
        <div class="slide-content-inner">
         <div class="slide-eyebrow">Anti Intrusione & Video Sorveglianza</div>
         <h1 class="slide-headline">Protezione<br>attiva per<br>ogni spazio.</h1>
         <p class="slide-body">Sistemi antintrusione e videosorveglianza su misura: allarmi, telecamere IP, accesso controllato e monitoraggio remoto.</p>
        </div>
+       <dotlottie-wc class="slide-media slide-media--sm" src="https://lottie.host/e8713a15-8cae-40bd-8284-a2bbc0fa81da/0WsI6Qaifj.lottie" style="width: 300px;height: 300px" autoplay loop></dotlottie-wc>
       </div>
     </div>
 
