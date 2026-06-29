@@ -68,8 +68,8 @@ function AuthPage() {
     >
       <WaveBackground />
       <Card className="w-full max-w-md p-8 space-y-6 border-white/10 bg-[#13091f]/80 text-white backdrop-blur-sm relative z-10">
-        <div className="flex items-center gap-3">
-          <GBLogo className="h-12 w-auto text-white" />
+        <div className="flex items-center justify-center gap-3">
+          <GBLogo className="h-28 w-auto text-white" />
         </div>
         <form onSubmit={submit} className="space-y-4">
           {mode === "signup" && (
