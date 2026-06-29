@@ -3,11 +3,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
-  Zap, LayoutDashboard, Users, Briefcase, HardHat, Clock,
+  LayoutDashboard, Users, Briefcase, HardHat, Clock,
   CheckSquare, Store, ShoppingCart, FileText, FileCheck, Settings, LogOut,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { GBLogo } from "@/components/GBLogo";
 
 interface NavItem { to: string; label: string; icon: any; adminOnly?: boolean; }
 
@@ -44,14 +45,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen flex bg-background">
       <aside className="hidden md:flex w-60 flex-col bg-sidebar text-sidebar-foreground">
         <div className="px-5 py-5 flex items-center gap-2 border-b border-sidebar-border">
-          <div className="size-8 rounded-md bg-sidebar-primary text-sidebar-primary-foreground flex items-center justify-center">
-            <Zap className="size-4" />
-          </div>
-          <div>
-            <div className="font-semibold leading-tight">Elettro CRM</div>
-            <div className="text-[10px] uppercase tracking-wider opacity-70">
-              {role === "admin" ? "Amministratore" : role === "contractor" ? "Operaio" : ""}
-            </div>
+          <GBLogo className="h-9 w-auto text-sidebar-foreground" />
+          <div className="text-[10px] uppercase tracking-wider opacity-70">
+            {role === "admin" ? "Amministratore" : role === "contractor" ? "Operaio" : ""}
           </div>
         </div>
         <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
@@ -85,7 +81,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex-1 flex flex-col min-w-0">
         <header className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-sidebar text-sidebar-foreground">
           <div className="flex items-center gap-2">
-            <Zap className="size-4" /><span className="font-semibold">Elettro CRM</span>
+            <GBLogo className="h-6 w-auto text-sidebar-foreground" />
           </div>
           <Button variant="ghost" size="sm" onClick={signOut}><LogOut className="size-4" /></Button>
         </header>
