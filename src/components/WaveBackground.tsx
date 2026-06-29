@@ -50,8 +50,8 @@ export function WaveBackground() {
           const y = leftY(x, i, t);
           x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         }
-        ctx.strokeStyle = `rgba(140,70,255,${alpha})`;
-        ctx.lineWidth = 1.1;
+        ctx.strokeStyle = `rgba(160,100,255,${alpha})`;
+        ctx.lineWidth = 1.6;
         ctx.stroke();
       }
 
@@ -62,8 +62,8 @@ export function WaveBackground() {
           const y = rightY(x, i, t);
           x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         }
-        ctx.strokeStyle = `rgba(140,70,255,${alpha})`;
-        ctx.lineWidth = 1.1;
+        ctx.strokeStyle = `rgba(160,100,255,${alpha})`;
+        ctx.lineWidth = 1.6;
         ctx.stroke();
       }
 
