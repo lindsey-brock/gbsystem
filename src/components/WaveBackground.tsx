@@ -84,7 +84,7 @@ export function WaveBackground() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 -z-10 size-full"
+      className="absolute inset-0 z-0 size-full"
       aria-hidden="true"
     />
   );
