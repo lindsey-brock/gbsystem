@@ -10,20 +10,26 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { GBLogo } from "@/components/GBLogo";
 
-interface NavItem { to: string; label: string; icon: any; adminOnly?: boolean; }
+interface NavItem { to: string; label: string; icon: any; adminOnly?: boolean; children?: NavItem[]; }
 
 const adminNav: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/clienti", label: "Clienti", icon: Users },
-  { to: "/lavori", label: "Lavori", icon: Briefcase },
-  { to: "/contractors", label: "Operai", icon: HardHat },
-  { to: "/ore/approvazione", label: "Approvazione ore", icon: CheckSquare },
+  {
+    to: "/clienti", label: "Clienti", icon: Users,
+    children: [{ to: "/lavori", label: "Lavori", icon: Briefcase }],
+  },
+  {
+    to: "/contractors", label: "Operai", icon: HardHat,
+    children: [{ to: "/ore/approvazione", label: "Approvazione ore", icon: CheckSquare }],
+  },
   { to: "/grossisti", label: "Grossisti", icon: Store },
   { to: "/acquisti", label: "Acquisti", icon: ShoppingCart },
   { to: "/fatture", label: "Fatture", icon: FileText },
   { to: "/dico", label: "Bozze DICO", icon: FileCheck },
   { to: "/impostazioni", label: "Impostazioni", icon: Settings },
 ];
+
+const flatAdminNav: NavItem[] = adminNav.flatMap((item) => [item, ...(item.children ?? [])]);
 
 const contractorNav: NavItem[] = [
   { to: "/ore", label: "Registra ore", icon: Clock },
@@ -35,6 +41,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const nav = role === "admin" ? adminNav : contractorNav;
+  const flatNav = role === "admin" ? flatAdminNav : contractorNav;
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -44,8 +51,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex bg-background">
       <aside className="hidden md:flex w-60 flex-col bg-sidebar text-sidebar-foreground">
-        <div className="px-5 py-5 flex items-center gap-2 border-b border-sidebar-border">
-          <GBLogo className="h-9 w-auto text-sidebar-foreground" />
+        <div className="px-5 py-5 flex flex-col gap-1 border-b border-sidebar-border">
+          <GBLogo className="h-14 w-auto text-sidebar-foreground" />
           <div className="text-[10px] uppercase tracking-wider opacity-70">
             {role === "admin" ? "Amministratore" : role === "contractor" ? "Operaio" : ""}
           </div>
@@ -55,19 +62,43 @@ export function AppShell({ children }: { children: ReactNode }) {
             const active = pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
             const Icon = item.icon;
             return (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition",
-                  active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60",
+              <div key={item.to}>
+                <Link
+                  to={item.to}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition",
+                    active
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60",
+                  )}
+                >
+                  <Icon className="size-4" />
+                  {item.label}
+                </Link>
+                {item.children && (
+                  <div className="ml-4 mt-1 space-y-1 border-l border-sidebar-border pl-3">
+                    {item.children.map((child) => {
+                      const childActive = pathname === child.to || pathname.startsWith(child.to);
+                      const ChildIcon = child.icon;
+                      return (
+                        <Link
+                          key={child.to}
+                          to={child.to}
+                          className={cn(
+                            "flex items-center gap-3 px-3 py-1.5 rounded-md text-sm transition",
+                            childActive
+                              ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                              : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60",
+                          )}
+                        >
+                          <ChildIcon className="size-3.5" />
+                          {child.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
                 )}
-              >
-                <Icon className="size-4" />
-                {item.label}
-              </Link>
+              </div>
             );
           })}
         </nav>
@@ -86,7 +117,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Button variant="ghost" size="sm" onClick={signOut}><LogOut className="size-4" /></Button>
         </header>
         <nav className="md:hidden flex overflow-x-auto gap-1 px-2 py-2 border-b bg-card">
-          {nav.map((item) => {
+          {flatNav.map((item) => {
             const active = pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
             return (
               <Link key={item.to} to={item.to}

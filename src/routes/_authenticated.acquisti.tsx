@@ -5,16 +5,19 @@ import { PageHeader } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Store } from "lucide-react";
 import { eur, itDate } from "@/lib/format";
 import { toast } from "sonner";
+import { WholesalerForm } from "@/routes/_authenticated.grossisti";
 
 export const Route = createFileRoute("/_authenticated/acquisti")({ component: AcquistiPage });
 
 function AcquistiPage() {
   const [wholesaler, setWholesaler] = useState("all");
   const [jobId, setJobId] = useState("all");
+  const [newWholesalerOpen, setNewWholesalerOpen] = useState(false);
   const qc = useQueryClient();
   const { data: wholesalers } = useQuery({ queryKey: ["wholesalers"], queryFn: async () => (await supabase.from("wholesalers").select("id, name").order("name")).data ?? [] });
   const { data: jobs } = useQuery({ queryKey: ["jobs-all"], queryFn: async () => (await supabase.from("jobs").select("id, job_name, clients(name)").order("job_name")).data ?? [] });
@@ -33,7 +36,16 @@ function AcquistiPage() {
   });
   return (
     <div>
-      <PageHeader title="Acquisti" actions={<Link to="/acquisti/nuovo"><Button><Plus className="size-4 mr-1" />Importa bolla</Button></Link>} />
+      <PageHeader title="Acquisti" actions={
+        <>
+          <Dialog open={newWholesalerOpen} onOpenChange={setNewWholesalerOpen}>
+            <DialogTrigger asChild><Button variant="outline"><Store className="size-4 mr-1" />Nuovo grossista</Button></DialogTrigger>
+            <DialogContent><DialogHeader><DialogTitle>Nuovo grossista</DialogTitle></DialogHeader>
+              <WholesalerForm onSaved={() => { setNewWholesalerOpen(false); qc.invalidateQueries({ queryKey: ["wholesalers"] }); }} /></DialogContent>
+          </Dialog>
+          <Link to="/acquisti/nuovo"><Button><Plus className="size-4 mr-1" />Importa bolla</Button></Link>
+        </>
+      } />
       <Card className="p-4">
         <div className="flex flex-wrap gap-3 mb-4">
           <Select value={wholesaler} onValueChange={setWholesaler}>

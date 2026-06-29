@@ -45,7 +45,7 @@ function GrossistiPage() {
   );
 }
 
-function WholesalerForm({ onSaved }: { onSaved: () => void }) {
+export function WholesalerForm({ onSaved }: { onSaved: () => void }) {
   const [name, setName] = useState("");
   const [systemType, setSystemType] = useState("generic_excel");
   const m = useMutation({
