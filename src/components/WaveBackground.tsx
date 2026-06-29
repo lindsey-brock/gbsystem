@@ -16,8 +16,8 @@ export function WaveBackground() {
     const RIBBONS_RIGHT = 22;
 
     function resize() {
-      W = canvas.width = window.innerWidth;
-      H = canvas.height = window.innerHeight;
+      W = canvas!.width = window.innerWidth;
+      H = canvas!.height = window.innerHeight;
     }
 
     function leftY(x: number, i: number, t: number) {
