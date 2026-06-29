@@ -3,8 +3,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
-  LayoutDashboard, Users, Briefcase, HardHat, Clock,
-  CheckSquare, Store, ShoppingCart, FileText, FileCheck, Settings, LogOut,
+  LayoutDashboard, Users, HardHat, Clock,
+  CheckSquare, Store, ShoppingCart, FileText, Settings, LogOut,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -14,10 +14,7 @@ interface NavItem { to: string; label: string; icon: any; adminOnly?: boolean; c
 
 const adminNav: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  {
-    to: "/clienti", label: "Clienti", icon: Users,
-    children: [{ to: "/lavori", label: "Lavori", icon: Briefcase }],
-  },
+  { to: "/clienti", label: "Clienti", icon: Users },
   {
     to: "/contractors", label: "Operai", icon: HardHat,
     children: [{ to: "/ore/approvazione", label: "Approvazione ore", icon: CheckSquare }],
@@ -25,7 +22,6 @@ const adminNav: NavItem[] = [
   { to: "/grossisti", label: "Grossisti", icon: Store },
   { to: "/acquisti", label: "Acquisti", icon: ShoppingCart },
   { to: "/fatture", label: "Fatture", icon: FileText },
-  { to: "/dico", label: "Bozze DICO", icon: FileCheck },
   { to: "/impostazioni", label: "Impostazioni", icon: Settings },
 ];
 

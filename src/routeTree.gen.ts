@@ -30,6 +30,8 @@ import { Route as AuthenticatedDicoIdRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedContractorsIdRouteImport } from './routes/_authenticated.contractors.$id'
 import { Route as AuthenticatedClientiIdRouteImport } from './routes/_authenticated.clienti.$id'
 import { Route as AuthenticatedAcquistiNuovoRouteImport } from './routes/_authenticated.acquisti.nuovo'
+import { Route as AuthenticatedAcquistiIdRouteImport } from './routes/_authenticated.acquisti.$id'
+import { Route as AuthenticatedClientiIdLavoriJobIdRouteImport } from './routes/_authenticated.clienti.$id.lavori.$jobId'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -140,6 +142,17 @@ const AuthenticatedAcquistiNuovoRoute =
     path: '/nuovo',
     getParentRoute: () => AuthenticatedAcquistiRoute,
   } as any)
+const AuthenticatedAcquistiIdRoute = AuthenticatedAcquistiIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedAcquistiRoute,
+} as any)
+const AuthenticatedClientiIdLavoriJobIdRoute =
+  AuthenticatedClientiIdLavoriJobIdRouteImport.update({
+    id: '/lavori/$jobId',
+    path: '/lavori/$jobId',
+    getParentRoute: () => AuthenticatedClientiIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -154,14 +167,16 @@ export interface FileRoutesByFullPath {
   '/impostazioni': typeof AuthenticatedImpostazioniRoute
   '/lavori': typeof AuthenticatedLavoriRouteWithChildren
   '/ore': typeof AuthenticatedOreRouteWithChildren
+  '/acquisti/$id': typeof AuthenticatedAcquistiIdRoute
   '/acquisti/nuovo': typeof AuthenticatedAcquistiNuovoRoute
-  '/clienti/$id': typeof AuthenticatedClientiIdRoute
+  '/clienti/$id': typeof AuthenticatedClientiIdRouteWithChildren
   '/contractors/$id': typeof AuthenticatedContractorsIdRoute
   '/dico/$id': typeof AuthenticatedDicoIdRoute
   '/fatture/$id': typeof AuthenticatedFattureIdRoute
   '/lavori/$id': typeof AuthenticatedLavoriIdRoute
   '/ore/approvazione': typeof AuthenticatedOreApprovazioneRoute
   '/ore/storico': typeof AuthenticatedOreStoricoRoute
+  '/clienti/$id/lavori/$jobId': typeof AuthenticatedClientiIdLavoriJobIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -176,14 +191,16 @@ export interface FileRoutesByTo {
   '/impostazioni': typeof AuthenticatedImpostazioniRoute
   '/lavori': typeof AuthenticatedLavoriRouteWithChildren
   '/ore': typeof AuthenticatedOreRouteWithChildren
+  '/acquisti/$id': typeof AuthenticatedAcquistiIdRoute
   '/acquisti/nuovo': typeof AuthenticatedAcquistiNuovoRoute
-  '/clienti/$id': typeof AuthenticatedClientiIdRoute
+  '/clienti/$id': typeof AuthenticatedClientiIdRouteWithChildren
   '/contractors/$id': typeof AuthenticatedContractorsIdRoute
   '/dico/$id': typeof AuthenticatedDicoIdRoute
   '/fatture/$id': typeof AuthenticatedFattureIdRoute
   '/lavori/$id': typeof AuthenticatedLavoriIdRoute
   '/ore/approvazione': typeof AuthenticatedOreApprovazioneRoute
   '/ore/storico': typeof AuthenticatedOreStoricoRoute
+  '/clienti/$id/lavori/$jobId': typeof AuthenticatedClientiIdLavoriJobIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -200,14 +217,16 @@ export interface FileRoutesById {
   '/_authenticated/impostazioni': typeof AuthenticatedImpostazioniRoute
   '/_authenticated/lavori': typeof AuthenticatedLavoriRouteWithChildren
   '/_authenticated/ore': typeof AuthenticatedOreRouteWithChildren
+  '/_authenticated/acquisti/$id': typeof AuthenticatedAcquistiIdRoute
   '/_authenticated/acquisti/nuovo': typeof AuthenticatedAcquistiNuovoRoute
-  '/_authenticated/clienti/$id': typeof AuthenticatedClientiIdRoute
+  '/_authenticated/clienti/$id': typeof AuthenticatedClientiIdRouteWithChildren
   '/_authenticated/contractors/$id': typeof AuthenticatedContractorsIdRoute
   '/_authenticated/dico/$id': typeof AuthenticatedDicoIdRoute
   '/_authenticated/fatture/$id': typeof AuthenticatedFattureIdRoute
   '/_authenticated/lavori/$id': typeof AuthenticatedLavoriIdRoute
   '/_authenticated/ore/approvazione': typeof AuthenticatedOreApprovazioneRoute
   '/_authenticated/ore/storico': typeof AuthenticatedOreStoricoRoute
+  '/_authenticated/clienti/$id/lavori/$jobId': typeof AuthenticatedClientiIdLavoriJobIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -224,6 +243,7 @@ export interface FileRouteTypes {
     | '/impostazioni'
     | '/lavori'
     | '/ore'
+    | '/acquisti/$id'
     | '/acquisti/nuovo'
     | '/clienti/$id'
     | '/contractors/$id'
@@ -232,6 +252,7 @@ export interface FileRouteTypes {
     | '/lavori/$id'
     | '/ore/approvazione'
     | '/ore/storico'
+    | '/clienti/$id/lavori/$jobId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -246,6 +267,7 @@ export interface FileRouteTypes {
     | '/impostazioni'
     | '/lavori'
     | '/ore'
+    | '/acquisti/$id'
     | '/acquisti/nuovo'
     | '/clienti/$id'
     | '/contractors/$id'
@@ -254,6 +276,7 @@ export interface FileRouteTypes {
     | '/lavori/$id'
     | '/ore/approvazione'
     | '/ore/storico'
+    | '/clienti/$id/lavori/$jobId'
   id:
     | '__root__'
     | '/'
@@ -269,6 +292,7 @@ export interface FileRouteTypes {
     | '/_authenticated/impostazioni'
     | '/_authenticated/lavori'
     | '/_authenticated/ore'
+    | '/_authenticated/acquisti/$id'
     | '/_authenticated/acquisti/nuovo'
     | '/_authenticated/clienti/$id'
     | '/_authenticated/contractors/$id'
@@ -277,6 +301,7 @@ export interface FileRouteTypes {
     | '/_authenticated/lavori/$id'
     | '/_authenticated/ore/approvazione'
     | '/_authenticated/ore/storico'
+    | '/_authenticated/clienti/$id/lavori/$jobId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -434,14 +459,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAcquistiNuovoRouteImport
       parentRoute: typeof AuthenticatedAcquistiRoute
     }
+    '/_authenticated/acquisti/$id': {
+      id: '/_authenticated/acquisti/$id'
+      path: '/$id'
+      fullPath: '/acquisti/$id'
+      preLoaderRoute: typeof AuthenticatedAcquistiIdRouteImport
+      parentRoute: typeof AuthenticatedAcquistiRoute
+    }
+    '/_authenticated/clienti/$id/lavori/$jobId': {
+      id: '/_authenticated/clienti/$id/lavori/$jobId'
+      path: '/lavori/$jobId'
+      fullPath: '/clienti/$id/lavori/$jobId'
+      preLoaderRoute: typeof AuthenticatedClientiIdLavoriJobIdRouteImport
+      parentRoute: typeof AuthenticatedClientiIdRoute
+    }
   }
 }
 
 interface AuthenticatedAcquistiRouteChildren {
+  AuthenticatedAcquistiIdRoute: typeof AuthenticatedAcquistiIdRoute
   AuthenticatedAcquistiNuovoRoute: typeof AuthenticatedAcquistiNuovoRoute
 }
 
 const AuthenticatedAcquistiRouteChildren: AuthenticatedAcquistiRouteChildren = {
+  AuthenticatedAcquistiIdRoute: AuthenticatedAcquistiIdRoute,
   AuthenticatedAcquistiNuovoRoute: AuthenticatedAcquistiNuovoRoute,
 }
 
@@ -450,12 +491,27 @@ const AuthenticatedAcquistiRouteWithChildren =
     AuthenticatedAcquistiRouteChildren,
   )
 
+interface AuthenticatedClientiIdRouteChildren {
+  AuthenticatedClientiIdLavoriJobIdRoute: typeof AuthenticatedClientiIdLavoriJobIdRoute
+}
+
+const AuthenticatedClientiIdRouteChildren: AuthenticatedClientiIdRouteChildren =
+  {
+    AuthenticatedClientiIdLavoriJobIdRoute:
+      AuthenticatedClientiIdLavoriJobIdRoute,
+  }
+
+const AuthenticatedClientiIdRouteWithChildren =
+  AuthenticatedClientiIdRoute._addFileChildren(
+    AuthenticatedClientiIdRouteChildren,
+  )
+
 interface AuthenticatedClientiRouteChildren {
-  AuthenticatedClientiIdRoute: typeof AuthenticatedClientiIdRoute
+  AuthenticatedClientiIdRoute: typeof AuthenticatedClientiIdRouteWithChildren
 }
 
 const AuthenticatedClientiRouteChildren: AuthenticatedClientiRouteChildren = {
-  AuthenticatedClientiIdRoute: AuthenticatedClientiIdRoute,
+  AuthenticatedClientiIdRoute: AuthenticatedClientiIdRouteWithChildren,
 }
 
 const AuthenticatedClientiRouteWithChildren =

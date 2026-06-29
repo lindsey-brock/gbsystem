@@ -1,13 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useState } from "react";
-import { itDate } from "@/lib/format";
+import { itDate, ymdMonth } from "@/lib/format";
+import { generatePagamentiForMonth } from "@/lib/pagamenti.functions";
 import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
 
@@ -16,6 +19,9 @@ export const Route = createFileRoute("/_authenticated/ore/approvazione")({ compo
 function ApprovazionePage() {
   const qc = useQueryClient();
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [month, setMonth] = useState(ymdMonth(new Date()));
+  const [generating, setGenerating] = useState(false);
+  const generatePagamenti = useServerFn(generatePagamentiForMonth);
   const { data } = useQuery({
     queryKey: ["pending-hours"],
     queryFn: async () => (await supabase.from("logged_hours").select("*, contractors(name), jobs(job_name)").eq("submitted", true).eq("approved", false).order("date", { ascending: false })).data ?? [],
@@ -50,7 +56,20 @@ function ApprovazionePage() {
   return (
     <div>
       <PageHeader title="Approvazione ore" description={`${data?.length ?? 0} voci in attesa`}
-        actions={selected.size > 0 ? <Button onClick={() => approve.mutate([...selected])}>Approva selezionate ({selected.size})</Button> : null} />
+        actions={
+          <div className="flex items-center gap-2 flex-wrap">
+            {selected.size > 0 && <Button onClick={() => approve.mutate([...selected])}>Approva selezionate ({selected.size})</Button>}
+            <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-40 h-9" />
+            <Button variant="outline" disabled={generating} onClick={async () => {
+              setGenerating(true);
+              try {
+                const r = await generatePagamenti({ data: { month } });
+                toast.success(`Pagamenti generati: ${r.created} creati, ${r.skipped} già presenti`);
+              } catch (e: any) { toast.error(e.message); }
+              finally { setGenerating(false); }
+            }}>Genera pagamenti mese</Button>
+          </div>
+        } />
       {Object.entries(grouped).map(([name, items]: any) => (
         <Card key={name} className="p-4 mb-4">
           <div className="flex justify-between items-center mb-3">

@@ -353,6 +353,129 @@ export type Database = {
           },
         ]
       }
+      pagamenti_operai: {
+        Row: {
+          contractor_id: string
+          created_at: string
+          data_pagamento: string | null
+          id: string
+          importo_dovuto: number
+          importo_pagato: number | null
+          job_id: string | null
+          mese: string
+          metodo_pagamento: string | null
+          note: string | null
+          ore_approvate: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          contractor_id: string
+          created_at?: string
+          data_pagamento?: string | null
+          id?: string
+          importo_dovuto?: number
+          importo_pagato?: number | null
+          job_id?: string | null
+          mese: string
+          metodo_pagamento?: string | null
+          note?: string | null
+          ore_approvate?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          contractor_id?: string
+          created_at?: string
+          data_pagamento?: string | null
+          id?: string
+          importo_dovuto?: number
+          importo_pagato?: number | null
+          job_id?: string | null
+          mese?: string
+          metodo_pagamento?: string | null
+          note?: string | null
+          ore_approvate?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagamenti_operai_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagamenti_operai_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transazioni: {
+        Row: {
+          controparte_iban: string | null
+          controparte_nome: string | null
+          created_at: string
+          data: string
+          descrizione: string | null
+          id: string
+          importo: number
+          matched_fattura_id: string | null
+          matched_pagamento_id: string | null
+          nordigen_transaction_id: string | null
+          riconciliato: boolean
+          valuta: string
+        }
+        Insert: {
+          controparte_iban?: string | null
+          controparte_nome?: string | null
+          created_at?: string
+          data: string
+          descrizione?: string | null
+          id?: string
+          importo: number
+          matched_fattura_id?: string | null
+          matched_pagamento_id?: string | null
+          nordigen_transaction_id?: string | null
+          riconciliato?: boolean
+          valuta?: string
+        }
+        Update: {
+          controparte_iban?: string | null
+          controparte_nome?: string | null
+          created_at?: string
+          data?: string
+          descrizione?: string | null
+          id?: string
+          importo?: number
+          matched_fattura_id?: string | null
+          matched_pagamento_id?: string | null
+          nordigen_transaction_id?: string | null
+          riconciliato?: boolean
+          valuta?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transazioni_matched_fattura_id_fkey"
+            columns: ["matched_fattura_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transazioni_matched_pagamento_id_fkey"
+            columns: ["matched_pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "pagamenti_operai"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       logged_hours: {
         Row: {
           approved: boolean

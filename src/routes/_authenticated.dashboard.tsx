@@ -11,11 +11,15 @@ import { useServerFn } from "@tanstack/react-start";
 import { promoteFirstUserToAdmin } from "@/lib/admin.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { ymdMonth } from "@/lib/format";
+import { MarkPaidDialog } from "@/components/pagamenti";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
 
 function Dashboard() {
   const { user, role } = useAuth();
+  const qc = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
@@ -34,6 +38,33 @@ function Dashboard() {
       };
     },
   });
+
+  const { data: pagamentiSospesi } = useQuery({
+    queryKey: ["dashboard-pagamenti-sospesi"],
+    enabled: role === "admin",
+    queryFn: async () => (await supabase.from("pagamenti_operai")
+      .select("*, contractors(name)")
+      .eq("status", "da_pagare")
+      .eq("mese", `${ymdMonth(new Date())}-01`)
+      .order("contractor_id")).data ?? [],
+  });
+
+  const { data: fattureSospese } = useQuery({
+    queryKey: ["dashboard-fatture-sospese"],
+    enabled: role === "admin",
+    queryFn: async () => (await supabase.from("invoices")
+      .select("*, clients(name)")
+      .eq("status", "sent")
+      .order("updated_at", { ascending: true })).data ?? [],
+  });
+
+  const pagamentiByContractor = (pagamentiSospesi ?? []).reduce((acc: any, p: any) => {
+    const key = p.contractors?.name ?? "—";
+    (acc[key] ??= { items: [], total: 0 });
+    acc[key].items.push(p);
+    acc[key].total += Number(p.importo_dovuto);
+    return acc;
+  }, {} as Record<string, { items: any[]; total: number }>);
   return (
     <div>
       <PageHeader title="Dashboard" description="Panoramica generale" />
@@ -70,6 +101,51 @@ function Dashboard() {
           </div>
         </Card>
       </div>
+
+      {role === "admin" && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+          <Card className="p-5">
+            <h2 className="font-semibold mb-3">Pagamenti operai in sospeso</h2>
+            <div className="space-y-3">
+              {Object.entries(pagamentiByContractor).map(([name, g]: any) => (
+                <div key={name} className="border-b pb-2">
+                  <div className="flex justify-between items-center text-sm mb-1">
+                    <div className="font-medium">{name}</div>
+                    <div className="font-medium">{eur(g.total)}</div>
+                  </div>
+                  <div className="space-y-1">
+                    {g.items.map((p: any) => (
+                      <div key={p.id} className="flex justify-between items-center text-xs text-muted-foreground">
+                        <span>{p.ore_approvate}h · {eur(p.importo_dovuto)}</span>
+                        <MarkPaidDialog pagamentoId={p.id} onPaid={() => qc.invalidateQueries({ queryKey: ["dashboard-pagamenti-sospesi"] })} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {!pagamentiSospesi?.length && <p className="text-sm text-muted-foreground">Nessun pagamento in sospeso.</p>}
+            </div>
+          </Card>
+          <Card className="p-5">
+            <h2 className="font-semibold mb-3">Fatture in sospeso</h2>
+            <div className="space-y-2">
+              {(fattureSospese ?? []).map((i: any) => {
+                const days = Math.floor((Date.now() - new Date(i.updated_at).getTime()) / 86400000);
+                return (
+                  <Link key={i.id} to="/fatture/$id" params={{ id: i.id }} className="flex justify-between items-center text-sm border-b pb-2 hover:bg-muted/40 -mx-2 px-2 rounded">
+                    <div>{i.clients?.name} <span className="text-muted-foreground">· {i.invoice_number ?? "n/n"}</span></div>
+                    <div className="flex items-center gap-2">
+                      <span>{eur(i.grand_total)}</span>
+                      <span className="text-xs text-muted-foreground">{days}gg</span>
+                    </div>
+                  </Link>
+                );
+              })}
+              {!fattureSospese?.length && <p className="text-sm text-muted-foreground">Nessuna fattura in sospeso.</p>}
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
