@@ -1,40 +1,69 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { eur } from "@/lib/format";
+import { eur, ymdMonth } from "@/lib/format";
+import { generatePagamentiForMonth } from "@/lib/pagamenti.functions";
 
 export const Route = createFileRoute("/_authenticated/contractors")({ component: ContractorsPage });
 
 function ContractorsPage() {
   const [open, setOpen] = useState(false);
+  const [month, setMonth] = useState(ymdMonth(new Date()));
+  const [generating, setGenerating] = useState(false);
   const qc = useQueryClient();
+  const generatePagamenti = useServerFn(generatePagamentiForMonth);
   const { data } = useQuery({
     queryKey: ["contractors"],
     queryFn: async () => (await supabase.from("contractors").select("*").order("name")).data ?? [],
   });
+  const { data: pendingCounts } = useQuery({
+    queryKey: ["pending-hours-by-contractor"],
+    queryFn: async () => {
+      const { data: hours } = await supabase.from("logged_hours").select("contractor_id").eq("submitted", true).eq("approved", false);
+      return (hours ?? []).reduce((acc: Record<string, number>, h: any) => { acc[h.contractor_id] = (acc[h.contractor_id] ?? 0) + 1; return acc; }, {});
+    },
+  });
   return (
     <div>
       <PageHeader title="Operai" actions={
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button><Plus className="size-4 mr-1" /> Nuovo operaio</Button></DialogTrigger>
-          <DialogContent><DialogHeader><DialogTitle>Nuovo operaio</DialogTitle></DialogHeader>
-            <ContractorForm onSaved={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["contractors"] }); }} />
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-40 h-9" />
+          <Button variant="outline" disabled={generating} onClick={async () => {
+            setGenerating(true);
+            try {
+              const r = await generatePagamenti({ data: { month } });
+              toast.success(`Pagamenti generati: ${r.created} creati, ${r.skipped} già presenti`);
+            } catch (e: any) { toast.error(e.message); }
+            finally { setGenerating(false); }
+          }}>Genera pagamenti mese</Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild><Button><Plus className="size-4 mr-1" /> Nuovo operaio</Button></DialogTrigger>
+            <DialogContent><DialogHeader><DialogTitle>Nuovo operaio</DialogTitle></DialogHeader>
+              <ContractorForm onSaved={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["contractors"] }); }} />
+            </DialogContent>
+          </Dialog>
+        </div>
       } />
       <Card className="p-4 divide-y">
         {(data ?? []).map((c) => (
-          <Link key={c.id} to="/contractors/$id" params={{ id: c.id }} className="flex justify-between py-3 hover:bg-muted/40 -mx-4 px-4">
-            <div><div className="font-medium">{c.name}</div><div className="text-xs text-muted-foreground">{c.email ?? "—"}</div></div>
+          <Link key={c.id} to="/contractors/$id" params={{ id: c.id }} className="flex justify-between items-center py-3 hover:bg-muted/40 -mx-4 px-4">
+            <div className="flex items-center gap-2">
+              <div><div className="font-medium">{c.name}</div><div className="text-xs text-muted-foreground">{c.email ?? "—"}</div></div>
+              {!!pendingCounts?.[c.id] && (
+                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">{pendingCounts[c.id]} da approvare</Badge>
+              )}
+            </div>
             <div className="text-sm">{eur(c.hourly_rate)} / h</div>
           </Link>
         ))}

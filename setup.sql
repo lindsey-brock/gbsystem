@@ -380,3 +380,27 @@ GRANT ALL ON public.transazioni TO service_role;
 ALTER TABLE public.transazioni ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Admin full access" ON public.transazioni
   FOR ALL USING (public.has_role(auth.uid(), 'admin'));
+
+-- ============ PUSH SUBSCRIPTIONS ============
+CREATE TABLE public.push_subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  endpoint TEXT NOT NULL UNIQUE,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.push_subscriptions TO authenticated;
+GRANT ALL ON public.push_subscriptions TO service_role;
+ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "push_subscriptions_own" ON public.push_subscriptions
+  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+-- ============ REALTIME (logged_hours submission notifications) ============
+ALTER TABLE public.logged_hours REPLICA IDENTITY FULL;
+
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.logged_hours;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;

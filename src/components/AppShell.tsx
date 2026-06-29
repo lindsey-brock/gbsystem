@@ -1,25 +1,24 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   LayoutDashboard, Users, HardHat, Clock,
-  CheckSquare, Store, ShoppingCart, FileText, Settings, LogOut,
+  ShoppingCart, FileText, Settings, LogOut,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { GBLogo } from "@/components/GBLogo";
+import { useHoursNotifications } from "@/hooks/use-hours-notifications";
 
 interface NavItem { to: string; label: string; icon: any; adminOnly?: boolean; children?: NavItem[]; }
 
 const adminNav: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/clienti", label: "Clienti", icon: Users },
-  {
-    to: "/contractors", label: "Operai", icon: HardHat,
-    children: [{ to: "/ore/approvazione", label: "Approvazione ore", icon: CheckSquare }],
-  },
-  { to: "/grossisti", label: "Grossisti", icon: Store },
+  { to: "/contractors", label: "Operai", icon: HardHat },
   { to: "/acquisti", label: "Acquisti", icon: ShoppingCart },
   { to: "/fatture", label: "Fatture", icon: FileText },
   { to: "/impostazioni", label: "Impostazioni", icon: Settings },
@@ -38,6 +37,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const nav = role === "admin" ? adminNav : contractorNav;
   const flatNav = role === "admin" ? flatAdminNav : contractorNav;
+  const { data: pendingHoursCount } = useQuery({
+    queryKey: ["pending-hours-count"],
+    enabled: role === "admin",
+    queryFn: async () => (await supabase.from("logged_hours").select("id", { count: "exact", head: true }).eq("submitted", true).eq("approved", false)).count ?? 0,
+    refetchInterval: 60_000,
+  });
+  useHoursNotifications(role === "admin");
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -70,6 +76,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                 >
                   <Icon className="size-4" />
                   {item.label}
+                  {item.to === "/contractors" && !!pendingHoursCount && (
+                    <Badge variant="outline" className="ml-auto bg-amber-50 text-amber-700 border-amber-200">{pendingHoursCount}</Badge>
+                  )}
                 </Link>
                 {item.children && (
                   <div className="ml-4 mt-1 space-y-1 border-l border-sidebar-border pl-3">

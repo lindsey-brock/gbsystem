@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { itDate, itMonth, ymdMonth } from "@/lib/format";
+import { submitMonthHours } from "@/lib/notifications.functions";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 
@@ -25,11 +27,9 @@ function Storico() {
     queryFn: async () => (await supabase.from("logged_hours").select("*, jobs(job_name, clients(name))").eq("contractor_id", contractorId!).gte("date", start).lt("date", end).order("date", { ascending: false })).data ?? [],
   });
   const total = (data ?? []).reduce((s: number, h: any) => s + Number(h.hours), 0);
+  const submitHours = useServerFn(submitMonthHours);
   const submitMonth = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from("logged_hours").update({ submitted: true, submitted_at: new Date().toISOString() }).eq("contractor_id", contractorId!).eq("submitted", false).gte("date", start).lt("date", end);
-      if (error) throw error;
-    },
+    mutationFn: async () => submitHours({ data: { month } }),
     onSuccess: () => { toast.success("Ore inviate per approvazione"); qc.invalidateQueries({ queryKey: ["my-hours"] }); },
     onError: (e: any) => toast.error(e.message),
   });

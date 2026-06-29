@@ -11,8 +11,70 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { listUsersWithRoles, setUserRole } from "@/lib/admin.functions";
+import { savePushSubscription } from "@/lib/notifications.functions";
+import { Bell } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/impostazioni")({ component: SettingsPage });
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+}
+
+function PushNotificationsCard() {
+  const [supported, setSupported] = useState(true);
+  const [subscribed, setSubscribed] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const save = useServerFn(savePushSubscription);
+
+  useEffect(() => {
+    if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+      setSupported(false);
+      return;
+    }
+    navigator.serviceWorker.ready.then(async (reg) => {
+      const sub = await reg.pushManager.getSubscription();
+      setSubscribed(!!sub);
+    }).catch(() => {});
+  }, []);
+
+  async function activate() {
+    setBusy(true);
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") { toast.error("Permesso notifiche negato"); return; }
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(import.meta.env.VITE_VAPID_PUBLIC_KEY),
+      });
+      const json = sub.toJSON();
+      await save({ data: { endpoint: json.endpoint!, p256dh: json.keys!.p256dh, auth: json.keys!.auth } });
+      setSubscribed(true);
+      toast.success("Notifiche attivate");
+    } catch (e: any) {
+      toast.error(e.message ?? "Errore attivazione notifiche");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card className="p-5 mb-6">
+      <h2 className="font-semibold mb-2 flex items-center gap-2"><Bell className="size-4" />Notifiche push</h2>
+      <p className="text-xs text-muted-foreground mb-4">Ricevi una notifica su questo dispositivo quando un operaio invia ore per approvazione, anche con l'app chiusa.</p>
+      {!supported ? (
+        <p className="text-sm text-muted-foreground">Notifiche push non supportate su questo browser/dispositivo.</p>
+      ) : subscribed ? (
+        <Button variant="outline" disabled>Notifiche attive</Button>
+      ) : (
+        <Button onClick={activate} disabled={busy}>{busy ? "Attivazione…" : "Attiva notifiche"}</Button>
+      )}
+    </Card>
+  );
+}
 
 function SettingsPage() {
   const qc = useQueryClient();
@@ -40,6 +102,7 @@ function SettingsPage() {
   return (
     <div>
       <PageHeader title="Impostazioni" description="Dati aziendali e gestione utenti" />
+      <PushNotificationsCard />
       <Card className="p-5 mb-6">
         <h2 className="font-semibold mb-3">Dati azienda</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
